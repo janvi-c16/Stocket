@@ -83,6 +83,7 @@ const data = {
             items: [
                 { title: "LSTM", url: "/prediction/lstm" },
                 { title: "BiLSTM", url: "/prediction/bilstm" },
+                { title: "GRU", url: "/prediction/gru" },
                 { title: "Random Forest", url: "/prediction/randomforest" },
                 { title: "ARIMA", url: "/prediction/ARIMA" },
             ],

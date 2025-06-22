@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from utils.LSTM_prediction import predict_stock_price_lstm
-from utils.BiLSTM_prediction import predict_stock_price_bilstm
+from utils.GRU_prediction import predict_stock_price_gru
 import gunicorn
 
 app = Flask(__name__)
@@ -25,6 +25,10 @@ def lstm(ticker):
 @app.route('/bilstm/<ticker>', methods=["GET"])
 def bilstm(ticker):
     return predict_stock_price_bilstm(ticker)
+
+@app.route('/gru/<ticker>', methods=['GET'])
+def gru(ticker):
+    return predict_stock_price_gru(ticker)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5002)

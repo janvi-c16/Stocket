@@ -14,6 +14,15 @@ const Footer = () => {
         
         },
         {
+            id: 3,
+            name: "Janvi Chauhan",
+            designation: "Machine Learning Developer",
+            image:
+              "/janvi.png",
+            linkedin: "https://www.linkedin.com/in/janvi-chauhan-9297a92a1/",
+            github: "https://github.com/janvi-c16",
+        },
+        {
             id: 4,
             name: "Ruqayya Shah",
             designation: "Machine Learning & Frontend Developer",
@@ -21,15 +30,6 @@ const Footer = () => {
             github: "",
             image:
               "/ruqayya.png",
-        },
-    {
-            id: 3,
-            name: "Janvi Chauhan",
-            designation: "Machine Learning Developer",
-            image:
-              "/janvi.png",
-            linkedin: "https://www.linkedin.com/in/janvi-chauhan-9297a92a1/",
-            github: "",
         },
         {
           id: 2,

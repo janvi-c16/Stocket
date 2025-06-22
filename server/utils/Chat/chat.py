@@ -1,4 +1,9 @@
 import google.generativeai as genai
+print("--- GENAI MODULE ---")
+print(genai)
+print(genai.__file__)
+print(dir(genai))
+print("--------------------")
 from dotenv import load_dotenv
 import os
 from flask import request, jsonify
