@@ -66,7 +66,7 @@ const Footer = () => {
                             <EyeLogo size={25} />
                           <a href="/" className="flex items-center">
                               <span className="ml-2 self-center text-2xl font-semibold whitespace-nowrap text-lime-500">
-                                  Stocket
+                                  $tocket
                               </span>
                           </a>
                           </div>

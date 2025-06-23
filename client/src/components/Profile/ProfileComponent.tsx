@@ -10,6 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from '@/components/ui/skeleton';
 import { MapPin, Copy, Check, Mail, Star, ExternalLink, Share2, Edit, Twitter, Linkedin, AtSign, Clock, Award, User, Settings } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 interface UserResponse {
   bio: string;
@@ -110,6 +114,13 @@ const StockCard = ({ stock }: { stock: StockItem }) => {
   );
 };
 
+const SOCIAL_TYPES = [
+  { type: 'twitter', label: 'Twitter', icon: Twitter },
+  { type: 'linkedin', label: 'LinkedIn', icon: Linkedin },
+  { type: 'github', label: 'GitHub', icon: AtSign },
+  { type: 'instagram', label: 'Instagram', icon: AtSign },
+];
+
 const ProfileComponent = () => {
   const { username } = useParams();
   const [copied, setCopied] = useState(false);
@@ -117,6 +128,18 @@ const ProfileComponent = () => {
   const [watchlist, setWatchlist] = useState<StockItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editData, setEditData] = useState<any>({});
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editSuccess, setEditSuccess] = useState(false);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [profileBannerFile, setProfileBannerFile] = useState<File | null>(null);
+  const [editConnections, setEditConnections] = useState<any[]>([]);
+  const [newConnection, setNewConnection] = useState({ type: 'twitter', username: '' });
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+  const [profileBannerPreview, setProfileBannerPreview] = useState<string | null>(null);
+  const [deviceType, setDeviceType] = useState<string>("");
 
   // Mock data for demonstration
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -204,25 +227,203 @@ const ProfileComponent = () => {
     }
   };
 
+  // Open edit modal and populate fields
+  const openEdit = () => {
+    setEditData({
+      bio: profileData?.bio || "",
+      location: profileData?.location || "",
+      aboutMe: profileData?.aboutMe || "",
+    });
+    setEditConnections(profileData?.connections || []);
+    setProfileImageFile(null);
+    setProfileBannerFile(null);
+    setProfileImagePreview(profileData?.profileImage || null);
+    setProfileBannerPreview(profileData?.profileBanner || null);
+    setEditOpen(true);
+    setEditError(null);
+    setEditSuccess(false);
+  };
+
+  // Handle field changes
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setEditData({ ...editData, [e.target.name]: e.target.value });
+  };
+
+  // Handle file changes
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'profileImage' | 'profileBanner') => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (type === 'profileImage') {
+        setProfileImageFile(file);
+        setProfileImagePreview(URL.createObjectURL(file));
+      }
+      if (type === 'profileBanner') {
+        setProfileBannerFile(file);
+        setProfileBannerPreview(URL.createObjectURL(file));
+      }
+    }
+  };
+
+  // Add new connection
+  const addConnection = () => {
+    if (!newConnection.username.trim()) return;
+    setEditConnections([...editConnections, { ...newConnection }]);
+    setNewConnection({ type: 'twitter', username: '' });
+  };
+
+  // Remove connection
+  const removeConnection = (idx: number) => {
+    setEditConnections(editConnections.filter((_, i) => i !== idx));
+  };
+
+  // Save profile changes
+  const saveProfile = async () => {
+    setEditLoading(true);
+    setEditError(null);
+    setEditSuccess(false);
+    try {
+      const formData = new FormData();
+      formData.append('bio', editData.bio);
+      formData.append('location', editData.location);
+      formData.append('aboutMe', editData.aboutMe);
+      formData.append('connections', JSON.stringify(editConnections));
+      if (profileImageFile) formData.append('profileImage', profileImageFile);
+      if (profileBannerFile) formData.append('profileBanner', profileBannerFile);
+      const response = await axios.put(`${backendUrl}/profile/update/${username}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (response.data.success) {
+        setEditSuccess(true);
+        setEditOpen(false);
+        toast.success('Profile updated successfully!');
+        window.location.reload();
+      } else {
+        setEditError(response.data.message || 'Failed to update profile');
+      }
+    } catch (err: any) {
+      setEditError(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const checkDevice = () => {
+      setDeviceType(window.innerWidth < 768 ? "Mobile" : "Desktop");
+    };
+    checkDevice();
+    window.addEventListener("resize", checkDevice);
+    return () => window.removeEventListener("resize", checkDevice);
+  }, []);
+
   return (
     <div className="bg-background min-h-screen w-full">
+      {/* Edit Profile Modal */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto max-w-3xl w-full">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>
+              Update your profile information, upload images, and manage your social links. All changes will be saved to your account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left column: Text fields */}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea id="bio" name="bio" value={editData.bio} onChange={handleEditChange} />
+              </div>
+              <div>
+                <Label htmlFor="aboutMe">About Me</Label>
+                <Textarea id="aboutMe" name="aboutMe" value={editData.aboutMe} onChange={handleEditChange} />
+              </div>
+              <div>
+                <Label htmlFor="location">Location</Label>
+                <Input id="location" name="location" value={editData.location} onChange={handleEditChange} />
+              </div>
+            </div>
+            {/* Right column: Images and Socials */}
+            <div className="space-y-4">
+              <div className="pt-2">
+                <h4 className="font-semibold mb-2">Profile Image</h4>
+                {profileImagePreview && (
+                  <img src={profileImagePreview} alt="Profile Preview" className="h-20 w-20 rounded-full object-cover mb-2" />
+                )}
+                <Input id="profileImage" type="file" accept="image/*" onChange={e => handleFileChange(e, 'profileImage')} />
+                {profileImageFile && <p className="text-xs mt-1">Selected: {profileImageFile.name}</p>}
+              </div>
+              <div className="pt-2">
+                <h4 className="font-semibold mb-2">Profile Banner</h4>
+                {profileBannerPreview && (
+                  <img src={profileBannerPreview} alt="Banner Preview" className="h-20 w-full object-cover mb-2 rounded" />
+                )}
+                <Input id="profileBanner" type="file" accept="image/*" onChange={e => handleFileChange(e, 'profileBanner')} />
+                {profileBannerFile && <p className="text-xs mt-1">Selected: {profileBannerFile.name}</p>}
+              </div>
+              <div className="pt-2">
+                <h4 className="font-semibold mb-2">Social Profiles</h4>
+                <div className="space-y-2">
+                  {editConnections.map((conn, idx) => {
+                    const Icon = SOCIAL_TYPES.find(s => s.type === conn.type)?.icon || AtSign;
+                    return (
+                      <div key={idx} className="flex items-center gap-2">
+                        <Icon className="h-5 w-5" />
+                        <span className="font-medium">{conn.type.charAt(0).toUpperCase() + conn.type.slice(1)}</span>
+                        <span className="text-muted-foreground">{conn.username}</span>
+                        <Button size="icon" variant="ghost" onClick={() => removeConnection(idx)}><span className="text-red-500">×</span></Button>
+                      </div>
+                    );
+                  })}
+                  <div className="flex items-center gap-2 mt-2">
+                    <select
+                      className="border rounded px-2 py-1 bg-background"
+                      value={newConnection.type}
+                      onChange={e => setNewConnection({ ...newConnection, type: e.target.value })}
+                    >
+                      {SOCIAL_TYPES.map(s => (
+                        <option key={s.type} value={s.type}>{s.label}</option>
+                      ))}
+                    </select>
+                    <Input
+                      placeholder="Username or URL"
+                      value={newConnection.username}
+                      onChange={e => setNewConnection({ ...newConnection, username: e.target.value })}
+                      className="w-40"
+                    />
+                    <Button size="sm" variant="secondary" onClick={addConnection}>Add</Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {editError && <p className="text-red-500 text-sm mt-2">{editError}</p>}
+          {editSuccess && <p className="text-green-500 text-sm mt-2">Profile updated!</p>}
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setEditOpen(false)} disabled={editLoading}>Cancel</Button>
+            <Button onClick={saveProfile} disabled={editLoading} {...(editLoading ? { loading: true } : {})}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="container mx-auto py-6">
         <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] lg:grid-cols-[1fr_380px] gap-8 p-4">
           {/* Left Section - Profile */}
           <div className="space-y-6">
             {/* Profile Card */}
-            <Card className="overflow-hidden border border-accent">
+            <Card className="overflow-hidden border border-accent w-full max-w-lg mx-auto md:max-w-none md:w-auto p-4 md:p-6">
               <div className="relative">
+                {/* Banner */}
                 {profileData?.profileBanner ? (
                   <img
                     src={profileData.profileBanner}
                     alt="Profile Banner"
-                    className="h-40 w-full object-cover"
+                    className="h-32 md:h-40 w-full object-cover"
                   />
                 ) : (
-                  <div className="h-40 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+                  <div className="h-32 md:h-40 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
                 )}
-                <div className="absolute -bottom-12 left-6">
+                {/* Avatar and Share */}
+                <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 md:left-6 md:translate-x-0 flex flex-col items-center md:block">
                   <div className="relative">
                     <Avatar className="w-24 h-24 border-4 border-background rounded-full">
                       {profileData?.profileImage ? (
@@ -250,19 +451,17 @@ const ProfileComponent = () => {
                   </TooltipProvider>
                 </div>
               </div>
-
-              <div className="pt-16 px-6 pb-6 space-y-5">
-                {/* Name, username and edit button */}
-                <div className="flex items-start justify-between">
-                  <div>
+              <div className="pt-20 md:pt-16 px-2 md:px-6 pb-6 space-y-4 md:space-y-5 flex flex-col items-center md:items-start">
+                {/* Name, username, badges, and edit button */}
+                <div className="flex flex-col items-center md:flex-row md:items-start md:justify-between w-full gap-2 md:gap-0">
+                  <div className="flex flex-col items-center md:items-start">
                     <div className="flex items-center gap-2">
-                      <h1 className="text-2xl font-bold">
+                      <h1 className="text-2xl md:text-3xl font-bold text-center md:text-left">
                         {profileData
                           ? `${profileData.firstname} ${profileData.lastname}`
                           : <Skeleton className="h-8 w-48" />}
                       </h1>
-                      
-                      {/* User badges */}
+                      {/* Badges */}
                       {profileData?.badges && profileData.badges.includes("verified") && (
                         <TooltipProvider>
                           <Tooltip>
@@ -275,7 +474,6 @@ const ProfileComponent = () => {
                           </Tooltip>
                         </TooltipProvider>
                       )}
-                      
                       {profileData?.badges && profileData.badges.includes("premium") && (
                         <TooltipProvider>
                           <Tooltip>
@@ -289,12 +487,10 @@ const ProfileComponent = () => {
                         </TooltipProvider>
                       )}
                     </div>
-                    
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mt-1">
                       <p className="text-sm text-muted-foreground">
                         {profileData ? `@${profileData.username}` : <Skeleton className="h-4 w-24" />}
                       </p>
-                      
                       {/* Custom status indicator */}
                       {profileData?.customStatus && (
                         <div className="flex items-center text-xs text-muted-foreground bg-accent/40 px-2 py-1 rounded-full">
@@ -304,8 +500,7 @@ const ProfileComponent = () => {
                       )}
                     </div>
                   </div>
-                  
-                  <Button variant="outline" size="sm" className="rounded-md">
+                  <Button variant="outline" size="sm" className="rounded-md w-full md:w-auto mt-4 md:mt-0" onClick={openEdit}>
                     <Edit className="h-4 w-4 mr-2" />
                     Edit Profile
                   </Button>
@@ -337,7 +532,7 @@ const ProfileComponent = () => {
                 </div>
                 
                 {/* Bio Section */}
-                <div className="bg-accent/30 rounded-lg p-4 border border-accent/30">
+                <div className="bg-accent/30 rounded-lg p-4 border border-accent/30 w-full">
                   <h3 className="text-sm font-medium mb-2 text-primary">Bio</h3>
                   <p className="text-sm leading-relaxed">
                     {profileData ? profileData.bio || "No bio provided" : <Skeleton className="h-16 w-full" />}
@@ -480,6 +675,9 @@ const ProfileComponent = () => {
               </CardHeader>
               <CardContent>
                 <TradingViewWidget />
+                <div className="mt-2 text-xs text-muted-foreground text-center">
+                  Device: <span className="font-semibold">{deviceType}</span>
+                </div>
               </CardContent>
             </Card>
             

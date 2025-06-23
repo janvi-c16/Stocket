@@ -170,7 +170,7 @@ export function AppSidebar() {
                                     <EyeLogo size={30} />
                                 </div>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-semibold text-xl text-indigo-600">Stocket</span>
+                                    <span className="truncate font-semibold text-xl text-lime-500">$tocket</span>
                                 </div>
                             </a>
                         </SidebarMenuButton>

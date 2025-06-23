@@ -67,19 +67,18 @@ const StockWidgetCard = ({ ticker, username, onRemove }: StockWidgetCardProps) =
   };
 
   return (
-    <Card className="p-4 w-[400px] h-[200px] relative">
-      <CardContent className="relative">
+    <Card className="p-0 shadow-lg rounded-xl bg-background border border-accent min-w-[340px] md:min-w-[400px] h-[260px] md:h-[300px] max-w-full w-full">
+      <CardContent className="relative p-0 h-full">
         {/* TradingView Widget */}
         <div
-          className="tradingview-widget-container w-full h-full"
+          className="tradingview-widget-container w-full aspect-[16/9] rounded-t-xl overflow-hidden"
           ref={widgetContainerRef}
         ></div>
-
         {/* Minus Button */}
         <button
           onClick={handleRemoveClick}
           aria-label={`Remove ${ticker} from watchlist`}
-          className="absolute top-1 right-7 bg-muted text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-900 z-10"
+          className="absolute top-2 right-2 bg-background/80 text-muted-foreground rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors z-10 shadow"
         >
           <CircleMinus />
         </button>
@@ -153,23 +152,23 @@ const WatchlistCard = () => {
   }
 
   return (
-    <div className="w-full p-4 space-y-4 relative">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {watchlist.length === 0 ? (
-            <h2 className="text-muted-foreground text-center flex items-center justify-center w-full h-full">No stocks in watchlist</h2>
-      ) : (
-        watchlist.map((ticker) => (
-          <StockWidgetCard
-            key={ticker}
-            ticker={ticker}
-            username={username}
-            onRemove={handleRemoveTicker}
-          />
-        ))
-      )}
+    <div className="w-full p-4 overflow-x-auto">
+      <div className="flex flex-row flex-wrap gap-8 whitespace-nowrap">
+        {watchlist.length === 0 ? (
+          <h2 className="text-muted-foreground text-center flex items-center justify-center w-full h-full">No stocks in watchlist</h2>
+        ) : (
+          watchlist.map((ticker) => (
+            <div key={ticker} className="flex-shrink-0">
+              <StockWidgetCard
+                ticker={ticker}
+                username={username}
+                onRemove={handleRemoveTicker}
+              />
+            </div>
+          ))
+        )}
+      </div>
     </div>
-    </div>
-    
   );
 };
 

@@ -13,7 +13,7 @@ import {
         <h2 className="text-2xl font-bold mb-4">Stock Price Prediction Workflow (GRU)</h2>
         <CodeFileDisplay
           filename="GRU"
-          file="https://colab.research.google.com/drive/PLACEHOLDER_GRU_NOTEBOOK_LINK"
+          file="https://colab.research.google.com/drive/1Y_PlG_XV769705qb7MdsfLThfTLXPPll?usp=sharing"
         />
         <p className="text-sm mt-5">A comprehensive workflow for analyzing and predicting stock prices using a GRU model.</p>
         <Accordion type="single" collapsible className="w-full">

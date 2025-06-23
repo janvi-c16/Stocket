@@ -19,6 +19,7 @@ import { ARIMA } from "./pages/ARIMA";
 import ErrorPage from "./pages/ErrorPage";
 import { Analytics } from "@vercel/analytics/react"
 import TermsAndConditions from "./pages/termsandconditions";
+import GRUPage from "./pages/GRU";
 
 const App = () => {
   return (
@@ -34,6 +35,7 @@ const App = () => {
         <Route path="/prediction/lstm" element={<LSTM />} /> 
         <Route path="/prediction/ARIMA" element={<ARIMA />} /> 
         <Route path="/prediction/randomforest" element={<RandomForest />} /> 
+        <Route path="/prediction/gru" element={<GRUPage />} />
         <Route path="/privacypolicy" element={<PrivacyPolicy />} /> 
         <Route path="/termsandconditions" element={<TermsAndConditions />} />
         <Route path="/learning" element={<Learning />} />
