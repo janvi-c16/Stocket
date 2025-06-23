@@ -5,8 +5,8 @@ from bson import ObjectId
 
 load_dotenv()
 
-client = MongoClient('mongodb+srv://krishnakanta2008:krishna2008@cluster0.7rimb.mongodb.net')
-db = client['PredictHub']  
+client = MongoClient(os.getenv("MONGO_URI"))
+db = client['Stocket']  
 
 class User:
     @staticmethod
