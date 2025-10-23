@@ -30,7 +30,7 @@ interface StockData {
     };
 }
 
-const BackendPredictionURL = "http://localhost:5002";
+const BackendPredictionURL = import.meta.env.VITE_ML_PREDICTION_URL || "http://localhost:5002";
 
 const LSTMPage = ({ data, loading, ticker }: PageProps) => {
     const [StockData, setStockData] = useState<ResponseData | null>(null);

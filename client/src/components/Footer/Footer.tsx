@@ -23,15 +23,6 @@ const Footer = () => {
             github: "https://github.com/janvi-c16",
         },
         {
-            id: 4,
-            name: "Ruqayya Shah",
-            designation: "Machine Learning & Frontend Developer",
-            linkedin: "https://www.linkedin.com/in/ruqayya-shah-92032923b/",
-            github: "",
-            image:
-              "/ruqayya.png",
-        },
-        {
           id: 2,
           name: "Naina Jain",
           designation: "Machine Learning Developer",
@@ -40,15 +31,7 @@ const Footer = () => {
           image:
             "/naina.png",
         },
-        {
-            id: 5,
-            name: "Tejas Chauhan",
-            designation: "Flask Backend Developer",
-            linkedin: "https://www.linkedin.com/in/tejas-chauhan-3051a2275/",
-            github: "https://github.com/Sandblaze05",
-            image:
-              "/tejas.png",
-        },
+        
       ];
   return (
     <div>
