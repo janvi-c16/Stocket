@@ -7,6 +7,13 @@ from tensorflow.keras.models import load_model
 import yfinance as yf
 import os
 
+# Disable browser impersonation globally to fix ImpersonateError on Render
+try:
+    import yfinance.scrapers.history
+    yfinance.scrapers.history.ENABLE_CHROME_IMPERSONATE = False
+except (ImportError, AttributeError):
+    pass  # Older version of yfinance may not have this
+
 def get_data(ticker, period='10y'):
     """
     Robust get_data similar to LSTM util; try multiple yfinance methods and fallbacks.
@@ -27,6 +34,11 @@ def get_data(ticker, period='10y'):
             for attempt in range(retry_count):
                 try:
                     _log(f"Attempt {attempt+1}/{retry_count}: Trying yf.Ticker('{sym}').history()")
+                    
+                    # Disable browser impersonation to fix ImpersonateError
+                    import yfinance.scrapers.history
+                    yfinance.scrapers.history.ENABLE_CHROME_IMPERSONATE = False
+                    
                     stock = yf.Ticker(sym)
                     df_local = stock.history(
                         period=period,
@@ -59,6 +71,11 @@ def get_data(ticker, period='10y'):
         if df is None:
             try:
                 _log(f"Falling back to yf.download('{ticker}')")
+                
+                # Disable browser impersonation
+                import yfinance.scrapers.history
+                yfinance.scrapers.history.ENABLE_CHROME_IMPERSONATE = False
+                
                 df2 = yf.download(ticker, period=period, progress=False, threads=False, timeout=30)
                 if df2 is not None and not df2.empty:
                     _log(f"✓ yf.download returned {len(df2)} rows for {ticker}")
