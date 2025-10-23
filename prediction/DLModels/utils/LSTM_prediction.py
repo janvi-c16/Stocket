@@ -7,12 +7,19 @@ from tensorflow.keras.models import load_model
 import yfinance as yf
 import os
 
-# Disable browser impersonation globally to fix ImpersonateError on Render
+# Force disable browser impersonation multiple ways to ensure it works on Render
+os.environ['YF_ENABLE_CHROME_IMPERSONATE'] = '0'
 try:
     import yfinance.scrapers.history
     yfinance.scrapers.history.ENABLE_CHROME_IMPERSONATE = False
 except (ImportError, AttributeError):
-    pass  # Older version of yfinance may not have this
+    pass
+
+# Also try setting it at module level
+try:
+    yf.scrapers.history.ENABLE_CHROME_IMPERSONATE = False
+except (AttributeError):
+    pass
 
 # 1. Fetch historical stock data
 def get_data(ticker, period='10y'):
