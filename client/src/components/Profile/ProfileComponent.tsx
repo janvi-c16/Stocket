@@ -219,7 +219,7 @@ const ProfileComponent = () => {
   const copyToClipboard = async () => {
     try {
       if (profileData?.username) {
-        await navigator.clipboard.writeText(`https://stocket.vercel.app/profile/${profileData.username}`);
+        await navigator.clipboard.writeText(`https://stocketai.vercel.app/profile/${profileData.username}`);
       }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -660,7 +660,7 @@ const ProfileComponent = () => {
               <CardContent>
                 <div className="flex items-center">
                   <p className="text-sm text-muted-foreground break-all truncate">
-                    {`https://stocket.vercel.app/profile/${profileData?.username}`}
+                    {`https://stocketai.vercel.app/profile/${profileData?.username}`}
                   </p>
                   <Button size="icon" variant="ghost" className="ml-auto">
                     <ExternalLink className="h-4 w-4" />

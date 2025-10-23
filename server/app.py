@@ -1,13 +1,12 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from routes import auth_routes , stock_routes , contact_routes, chat_routes
-import gunicorn
 
 app = Flask(__name__)
 
 CORS(app, supports_credentials=True, resources={
     r"/*": {
-        "origins": ["http://localhost:5173","https://stocket.vercel.app"],
+        "origins": ["http://localhost:5173","https://stocketai.vercel.app"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }

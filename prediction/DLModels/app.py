@@ -2,13 +2,12 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from utils.LSTM_prediction import predict_stock_price_lstm
 from utils.GRU_prediction import predict_stock_price_gru
-import gunicorn
 
 app = Flask(__name__)
 
 CORS(app, supports_credentials=True, resources={
     r"/*": {
-        "origins": ["http://localhost:5173","https://stocket.vercel.app"],
+        "origins": ["http://localhost:5173","https://stocketai.vercel.app"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
