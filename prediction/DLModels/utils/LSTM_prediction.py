@@ -112,71 +112,155 @@ def get_data(ticker, period='10y'):
 
 # 2. Predict using LSTM model
 def LSTM_Model(df):
-    # Use only 'Close' column
-    close_prices = df[['Close']]
-    dataset = close_prices.values
+    """
+    Make predictions using the LSTM model
+    """
+    try:
+        print(f"[LSTM_Model] Starting prediction with {len(df)} rows of data", flush=True)
+        
+        # Use only 'Close' column
+        if 'Close' not in df.columns:
+            raise ValueError(f"DataFrame missing 'Close' column. Available columns: {list(df.columns)}")
+        
+        close_prices = df[['Close']]
+        dataset = close_prices.values
+        
+        if len(dataset) < 100:
+            raise ValueError(f"Insufficient data: got {len(dataset)} rows, need at least 100 for reliable predictions")
 
-    # Train/test split (70/30)
-    train_size = int(len(dataset) * 0.7)
-    train_data = dataset[:train_size]
-    test_data = dataset[train_size - 60:]  # include last 60 days for test input
+        # Train/test split (70/30)
+        train_size = int(len(dataset) * 0.7)
+        train_data = dataset[:train_size]
+        test_data = dataset[train_size - 60:]  # include last 60 days for test input
 
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    scaled_train = scaler.fit_transform(train_data)
-    scaled_total = scaler.transform(test_data)
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        scaled_train = scaler.fit_transform(train_data)
+        scaled_total = scaler.transform(test_data)
 
-    # Prepare training data
-    X_train, y_train = [], []
-    for i in range(60, len(scaled_train)):
-        X_train.append(scaled_train[i-60:i, 0])
-        y_train.append(scaled_train[i, 0])
-    X_train, y_train = np.array(X_train), np.array(y_train)
-    X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
+        # Prepare training data
+        X_train, y_train = [], []
+        for i in range(60, len(scaled_train)):
+            X_train.append(scaled_train[i-60:i, 0])
+            y_train.append(scaled_train[i, 0])
+        X_train, y_train = np.array(X_train), np.array(y_train)
+        X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
 
-    # Load model
-    model_path = os.path.join(os.getcwd(), 'utils', 'Saved_Models', 'LSTM_model.keras')
-    model = load_model(model_path)
+        # Load model with better error handling
+        # Note: Try both lowercase and uppercase filenames
+        possible_model_names = ['lstm_model.keras', 'LSTM_model.keras']
+        model_path = None
+        
+        for model_name in possible_model_names:
+            test_path = os.path.join(os.getcwd(), 'utils', 'Saved_Models', model_name)
+            if os.path.exists(test_path):
+                model_path = test_path
+                break
+        
+        if model_path is None:
+            # Try alternative paths
+            alternative_paths = [
+                'utils/Saved_Models/lstm_model.keras',
+                'utils/Saved_Models/LSTM_model.keras',
+                'Saved_Models/lstm_model.keras',
+                'Saved_Models/LSTM_model.keras',
+                '/app/utils/Saved_Models/lstm_model.keras',
+                '/app/utils/Saved_Models/LSTM_model.keras',
+                './utils/Saved_Models/lstm_model.keras',
+                './utils/Saved_Models/LSTM_model.keras'
+            ]
+            for alt_path in alternative_paths:
+                if os.path.exists(alt_path):
+                    print(f"[LSTM_Model] Found model at alternative path: {alt_path}", flush=True)
+                    model_path = alt_path
+                    break
+        
+        if model_path is None or not os.path.exists(model_path):
+            # List what's actually in the directory for debugging
+            try:
+                print(f"[LSTM_Model] Current working directory: {os.getcwd()}", flush=True)
+                utils_path = os.path.join(os.getcwd(), 'utils')
+                if os.path.exists(utils_path):
+                    print(f"[LSTM_Model] Contents of utils/: {os.listdir(utils_path)}", flush=True)
+                    saved_models_path = os.path.join(utils_path, 'Saved_Models')
+                    if os.path.exists(saved_models_path):
+                        print(f"[LSTM_Model] Contents of Saved_Models/: {os.listdir(saved_models_path)}", flush=True)
+            except Exception as e:
+                print(f"[LSTM_Model] Error listing directory: {e}", flush=True)
+            
+            raise FileNotFoundError(f"LSTM model file not found. Tried: {possible_model_names + alternative_paths}")
+        
+        print(f"[LSTM_Model] Loading model from: {model_path}", flush=True)
+        model = load_model(model_path)
+        print(f"[LSTM_Model] Model loaded successfully", flush=True)
 
-    # Prepare testing data
-    X_test, y_test = [], []
-    for i in range(60, len(scaled_total)):
-        X_test.append(scaled_total[i-60:i, 0])
-        y_test.append(scaled_total[i, 0])
-    X_test, y_test = np.array(X_test), np.array(y_test)
-    X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
+        # Prepare testing data
+        X_test, y_test = [], []
+        for i in range(60, len(scaled_total)):
+            X_test.append(scaled_total[i-60:i, 0])
+            y_test.append(scaled_total[i, 0])
+        X_test, y_test = np.array(X_test), np.array(y_test)
+        X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
 
-    # Predict
-    predictions = model.predict(X_test)
-    predictions = scaler.inverse_transform(predictions)
-    y_test = scaler.inverse_transform(y_test.reshape(-1, 1))
+        # Predict
+        print(f"[LSTM_Model] Running predictions on {len(X_test)} test samples", flush=True)
+        predictions = model.predict(X_test, verbose=0)
+        predictions = scaler.inverse_transform(predictions)
+        y_test = scaler.inverse_transform(y_test.reshape(-1, 1))
 
-    # Last 30 days prediction comparison
-    last_30_true = y_test[-30:].flatten()
-    last_30_pred = predictions[-30:].flatten()
+        # Last 30 days prediction comparison
+        last_30_true = y_test[-30:].flatten()
+        last_30_pred = predictions[-30:].flatten()
 
-    # Predict next day's price
-    last_60_days = scaled_total[-60:]
-    next_input = last_60_days.reshape(1, 60, 1)
-    next_day_scaled = model.predict(next_input)
-    next_day_price = scaler.inverse_transform(next_day_scaled)[0][0]
+        # Predict next day's price
+        last_60_days = scaled_total[-60:]
+        next_input = last_60_days.reshape(1, 60, 1)
+        next_day_scaled = model.predict(next_input, verbose=0)
+        next_day_price = scaler.inverse_transform(next_day_scaled)[0][0]
+        
+        print(f"[LSTM_Model] Prediction complete. Next day price: ${next_day_price:.2f}", flush=True)
 
-    return last_30_true, last_30_pred, next_day_price
+        return last_30_true, last_30_pred, next_day_price
+        
+    except Exception as e:
+        print(f"[LSTM_Model] ERROR in prediction: {type(e).__name__}: {str(e)}", flush=True)
+        import traceback
+        traceback.print_exc()
+        raise RuntimeError(f"Model prediction failed: {str(e)}")
 
 # 3. API Handler
 def predict_stock_price_lstm(ticker):
+    """
+    Main API handler for LSTM stock price prediction
+    """
     try:
+        print(f"[predict_stock_price_lstm] Request received for ticker: {ticker}", flush=True)
+        
         if not ticker:
             return jsonify({'error': 'Ticker is required'}), 400
 
+        # Step 1: Fetch data
+        print(f"[predict_stock_price_lstm] Step 1: Fetching data...", flush=True)
         df = get_data(ticker)
+        print(f"[predict_stock_price_lstm] Data fetch complete, got {len(df)} rows", flush=True)
+        
+        # Step 2: Run prediction
+        print(f"[predict_stock_price_lstm] Step 2: Running LSTM model...", flush=True)
         last_true, last_pred, next_day_price = LSTM_Model(df)
+        print(f"[predict_stock_price_lstm] Prediction complete", flush=True)
 
-        return jsonify({
+        result = {
             "ticker": ticker.upper(),
             "original_prices": last_true.tolist(),
             "predicted_prices": last_pred.tolist(),
             "next_day_prediction": float(round(next_day_price, 3))
-        })
+        }
+        
+        print(f"[predict_stock_price_lstm] SUCCESS - Returning prediction for {ticker}", flush=True)
+        return jsonify(result)
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        error_msg = str(e)
+        print(f"[predict_stock_price_lstm] ERROR: {type(e).__name__}: {error_msg}", flush=True)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': error_msg}), 500
