@@ -9,13 +9,105 @@ import os
 
 # 1. Fetch historical stock data
 def get_data(ticker, period='10y'):
+    """
+    Robustly fetch historical data for a ticker. Tries multiple yfinance methods and a few
+    symbol fallbacks (NSE/BSE) for non-US tickers.
+
+    Raises RuntimeError with a detailed message on failure so the server logs contain useful info.
+    """
     try:
-        stock = yf.Ticker(ticker)
-        df = stock.history(period=period)
-        if df.empty:
-            raise ValueError("No data returned from yfinance.")
+        if not ticker or not isinstance(ticker, str):
+            raise ValueError("Ticker must be a non-empty string")
+
+        original_ticker = ticker
+        ticker = ticker.strip()
+        # Normalize common formats
+        ticker = ticker.upper()
+
+        def _log(msg):
+            # Print to stdout so Render logs capture it
+            print(f"[LSTM_prediction] {msg}", flush=True)
+
+        _log(f"Fetching data for ticker: '{original_ticker}' -> normalized: '{ticker}', period={period}")
+
+        # Helper to try a fetch and return df or None
+        def try_history(sym, retry_count=3):
+            for attempt in range(retry_count):
+                try:
+                    _log(f"Attempt {attempt+1}/{retry_count}: Trying yf.Ticker('{sym}').history()")
+                    
+                    # Create ticker with timeout and proxy settings
+                    stock = yf.Ticker(sym)
+                    
+                    # Try with different parameters that may work better on Render
+                    df_local = stock.history(
+                        period=period,
+                        timeout=30,  # Longer timeout for slower networks
+                        raise_errors=False  # Don't raise on 404s
+                    )
+                    
+                    if df_local is not None and not df_local.empty:
+                        _log(f"✓ history() returned {len(df_local)} rows for {sym}")
+                        return df_local
+                    else:
+                        _log(f"✗ history() returned empty dataframe for {sym}")
+                        
+                except Exception as ex:
+                    _log(f"✗ history() for {sym} attempt {attempt+1} raised: {type(ex).__name__}: {str(ex)}")
+                    if attempt < retry_count - 1:
+                        import time
+                        time.sleep(1)  # Brief pause before retry
+                        
+            return None
+
+        # 1) Try the given symbol
+        df = try_history(ticker)
+
+        # 2) If empty and looks like an Indian symbol without suffix, try .NS then .BO
+        if df is None and not (ticker.endswith('.NS') or ticker.endswith('.BO')):
+            if ticker.startswith('NSE:'):
+                sym = ticker[4:]
+                df = try_history(sym + '.NS') or try_history(sym + '.BO')
+            elif ticker.startswith('BSE:'):
+                sym = ticker[4:]
+                df = try_history(sym + '.BO') or try_history(sym + '.NS')
+            else:
+                df = try_history(ticker + '.NS') or try_history(ticker + '.BO')
+
+        # 3) As a fallback try yf.download
+        if df is None:
+            try:
+                _log(f"Falling back to yf.download('{ticker}')")
+                df2 = yf.download(
+                    ticker, 
+                    period=period, 
+                    progress=False, 
+                    threads=False,
+                    timeout=30
+                )
+                if df2 is not None and not df2.empty:
+                    _log(f"✓ yf.download returned {len(df2)} rows for {ticker}")
+                    df = df2
+                else:
+                    _log(f"✗ yf.download returned empty for {ticker}")
+            except Exception as ex:
+                _log(f"✗ yf.download for {ticker} raised: {type(ex).__name__}: {str(ex)}")
+
+        if df is None or df.empty:
+            error_msg = (
+                f"No data returned from yfinance for '{original_ticker}' (normalized '{ticker}'). "
+                f"This could be due to: 1) Invalid ticker symbol, 2) Network connectivity issues on the server, "
+                f"3) Yahoo Finance blocking requests from this IP, or 4) Rate limiting. "
+                f"If this works locally but not on Render, it's likely a network/firewall issue."
+            )
+            _log(f"FINAL ERROR: {error_msg}")
+            raise ValueError(error_msg)
+
+        _log(f"✓ Successfully fetched {len(df)} rows of data for {ticker}")
         return df
+        
     except Exception as e:
+        # Include original message and re-raise as RuntimeError so the Flask route returns it
         raise RuntimeError(f"Error fetching data: {str(e)}")
 
 # 2. Predict using LSTM model

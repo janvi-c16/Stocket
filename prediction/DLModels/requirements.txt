@@ -5,8 +5,10 @@ gunicorn
 requests
 scikit-learn
 keras>=3.0.0
-yfinance
+yfinance>=0.2.32
 matplotlib
 tensorflow>=2.13
 numpy
 pandas
+requests-cache
+lxml
