@@ -5,7 +5,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from '@/components/ui/skeleton';
@@ -53,16 +52,18 @@ interface StockItem {
 const backendUrl = import.meta.env.VITE_BACKEND_URL ||'http://localhost:5000';
 
 // Status indicator component
-const StatusIndicator = ({ status }) => {
-  const statusColors = {
+const StatusIndicator = ({ status }: { status?: 'online' | 'idle' | 'dnd' | 'offline' }) => {
+  const statusColors: Record<string, string> = {
     online: "bg-green-500",
     idle: "bg-yellow-500",
     dnd: "bg-red-500",
     offline: "bg-gray-500"
   };
 
+  const colorClass = status ? statusColors[status] ?? statusColors.offline : statusColors.offline;
+
   return (
-    <div className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-background ${statusColors[status] || statusColors.offline}`} />
+    <div className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-background ${colorClass}`} />
   );
 };
 
@@ -143,7 +144,7 @@ const ProfileComponent = () => {
 
   // Mock data for demonstration
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const mockStockDetails = {
+  const mockStockDetails: Record<string, { name: string; change: number }> = {
     "AAPL": { name: "Apple Inc.", change: 1.25 },
     "TSLA": { name: "Tesla, Inc.", change: -2.1 },
     "MSFT": { name: "Microsoft Corporation", change: 0.87 },
@@ -200,7 +201,7 @@ const ProfileComponent = () => {
         // Enhance watchlist items with mock data
         const enhancedWatchlist = data.watchlist.map(symbol => ({
           symbol,
-          ...mockStockDetails[symbol]
+          ...(mockStockDetails[symbol] ?? { name: symbol, change: 0 })
         }));
 
         setWatchlist(enhancedWatchlist);

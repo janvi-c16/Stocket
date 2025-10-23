@@ -7,7 +7,7 @@ const EyeLogo = ({ size = 35 }: { size?: number }) => {
   const rightEyeRef = useRef<HTMLDivElement>(null);
   const [isBlinking, setIsBlinking] = useState(false);
   const [hasCursor, setHasCursor] = useState(true);
-  const [activeElement, setActiveElement] = useState<Element | null>(null);
+  // track active element if needed in the future
 
   useEffect(() => {
     // Detect if device has cursor (non-touch device)
@@ -77,9 +77,8 @@ const EyeLogo = ({ size = 35 }: { size?: number }) => {
     };
 
     // Track keyboard events and text inputs
-    const handleKeyUp = (e: KeyboardEvent) => {
-      const target = document.activeElement;
-      setActiveElement(target);
+    const handleKeyUp = () => {
+      const target = document.activeElement as Element | null;
       
       if (target && (
           target.tagName === 'INPUT' || 
@@ -131,13 +130,12 @@ const EyeLogo = ({ size = 35 }: { size?: number }) => {
 
     // Reset eyes when no input is active
     const handleBlur = () => {
-      setActiveElement(null);
+      // no-op after removing active element state
     };
 
     // Track focus changes to detect when inputs are activated
     const handleFocus = (e: FocusEvent) => {
       const target = e.target as Element;
-      setActiveElement(target);
       
       // Get position of the focused element
       if (target) {
@@ -158,8 +156,8 @@ const EyeLogo = ({ size = 35 }: { size?: number }) => {
     }
 
     // Track click positions to update eye position immediately
-    const handleClick = (e: MouseEvent) => {
-      moveEyes(e.clientX, e.clientY);
+    const handleClick = (ev: MouseEvent) => {
+      moveEyes(ev.clientX, ev.clientY);
     };
 
     // Add event listeners

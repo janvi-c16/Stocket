@@ -1,7 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { CalendarIcon, HomeIcon, MailIcon, LibraryBig } from "lucide-react";
-import EyeLogo from "@/components/ui/EyeLogo";
 
 import { cn } from "./../../lib/utils";
 import { buttonVariants } from "./../ui/button";
