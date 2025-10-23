@@ -33,7 +33,7 @@ interface StockData {
 const BackendPredictionURL = import.meta.env.VITE_DL_PREDICTION_URL || "http://localhost:5002";
 
 const LSTMPage = ({ data, loading, ticker }: PageProps) => {
-    const [StockData, setStockData] = useState<ResponseData | null>(null);
+    const [prediction, setPrediction] = useState<ResponseData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     console.log(data,loading);
     
@@ -42,10 +42,42 @@ const LSTMPage = ({ data, loading, ticker }: PageProps) => {
             setIsLoading(true);
             try {
                 const response = await fetch(`${BackendPredictionURL}/lstm/${ticker}`);
+
+                // If server returned non-OK, read the text for debugging and avoid parsing JSON
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error(`Prediction server error (${response.status}):`, text);
+                    setPrediction(null);
+                    return;
+                }
+
+                const contentType = response.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('Unexpected non-JSON response from prediction server:', text);
+                    setPrediction(null);
+                    return;
+                }
+
                 const result = await response.json();
+
+                // Validate structure before using it
+                if (!result || !Array.isArray(result.predicted_prices) || !Array.isArray(result.original_prices)) {
+                    console.error('Invalid prediction response structure:', result);
+                    setPrediction(null);
+                    return;
+                }
+
+                // Safe numeric adjustments (preserve numbers or coerce)
+                result.next_day_prediction = Number(result.next_day_prediction) || 0;
+                result.predicted_prices = result.predicted_prices.map((price: any) => Number(price) || 0);
+
+                // Example offset previously used in UI — keep but done safely
+                // (remove or adjust this in production if not desired)
                 result.next_day_prediction += 10;
                 result.predicted_prices = result.predicted_prices.map((price: number) => price + 10);
-                setStockData(result);
+
+                setPrediction(result);
             } catch (error) {
                 console.error("Error fetching data:", error);
             } finally {
@@ -56,10 +88,10 @@ const LSTMPage = ({ data, loading, ticker }: PageProps) => {
         fetchData();
     }, [ticker]);
 
-    const chartData = StockData ? StockData.original_prices.map((price, index) => ({
+    const chartData = prediction && Array.isArray(prediction.original_prices) ? prediction.original_prices.map((price, index) => ({
         date: `Day ${index + 1}`,
         original: price,
-        predicted: StockData.predicted_prices[index]
+        predicted: (Array.isArray(prediction.predicted_prices) && typeof prediction.predicted_prices[index] !== 'undefined') ? prediction.predicted_prices[index] : null
     })) : [];
 
     return (
@@ -68,7 +100,7 @@ const LSTMPage = ({ data, loading, ticker }: PageProps) => {
                 {/* Main content area */}
                 <Card className="p-6 md:col-span-9 overflow-x-auto">
                     <h2 className="text-2xl font-bold mb-6 text-white">Stock Price Prediction Analysis</h2>
-                    {isLoading ? (
+                                    {isLoading ? (
                         <div className="flex items-center justify-center h-[400px]">
                             <div className="flex items-center space-x-2">
                                 <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse"></div>
@@ -187,13 +219,13 @@ const LSTMPage = ({ data, loading, ticker }: PageProps) => {
                                     <p className="text-white">Loading prediction...</p>
                                 </div>
                             ) : (
-                                StockData && (
+                                prediction && (
                                     <div className="space-y-2">
                                         <p className="text-sm text-gray-300 font-medium">
                                             Expected Price
                                         </p>
                                         <p className="text-3xl font-extrabold text-green-400">
-                                            ${StockData.next_day_prediction.toFixed(2)}
+                                            ${typeof prediction.next_day_prediction === 'number' ? prediction.next_day_prediction.toFixed(2) : 'N/A'}
                                         </p>
                                     </div>
                                 )
