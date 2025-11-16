@@ -31,14 +31,6 @@ const Footer = () => {
           image:
             "/naina.png",
         },
-        {
-            id: 4,
-            name: "Ruqayya Shah",
-            designation: "Frontend Developer & ML Developer",
-            linkedin: "https://www.linkedin.com/in/ruqayya-shah-92032923b",
-            github: "https://github.com/Ruqayya0805",
-            image:"/ruqayya.png",
-        }
       ];
   return (
     <div>
