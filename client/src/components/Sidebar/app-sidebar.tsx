@@ -127,7 +127,7 @@ export function AppSidebar() {
 
                 setUsername(storedUsername)
 
-                const response = await fetch(`${BACKEND_URL}/profile/${storedUsername}`, {
+                const response = await fetch(`${BACKEND_URL}/profile/details/${storedUsername}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',

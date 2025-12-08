@@ -4,6 +4,6 @@ pymongo
 python-dotenv
 gunicorn
 requests
-yfinance
+yfinance>=0.2.40
 cloudinary
 google-generativeai

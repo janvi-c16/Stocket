@@ -19,15 +19,26 @@ def home():
  
 @app.route('/lstm/<ticker>', methods=['GET'])
 def lstm(ticker):
-    return predict_stock_price_lstm(ticker)
+    try:
+        return predict_stock_price_lstm(ticker)
+    except Exception as e:
+        response = jsonify({"error": str(e)})
+        response.status_code = 500
+        return response
 
-@app.route('/bilstm/<ticker>', methods=["GET"])
-def bilstm(ticker):
-    return predict_stock_price_bilstm(ticker)
+# BiLSTM route - commented out until BiLSTM_prediction module is implemented
+# @app.route('/bilstm/<ticker>', methods=["GET"])
+# def bilstm(ticker):
+#     return predict_stock_price_bilstm(ticker)
 
 @app.route('/gru/<ticker>', methods=['GET'])
 def gru(ticker):
-    return predict_stock_price_gru(ticker)
+    try:
+        return predict_stock_price_gru(ticker)
+    except Exception as e:
+        response = jsonify({"error": str(e)})
+        response.status_code = 500
+        return response
 
 if __name__ == '__main__':
     app.run(debug=True, port=5002)

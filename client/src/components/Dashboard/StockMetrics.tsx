@@ -9,7 +9,9 @@ interface MetricProps {
 }
 
 export function StockMetric({ title, value, change, prefix = "" }: MetricProps) {
-    const isPositive = change > 0
+    const safeValue = typeof value === 'number' ? value : 0;
+    const safeChange = typeof change === 'number' ? change : 0;
+    const isPositive = safeChange > 0
 
     return (
         <Card>
@@ -22,11 +24,11 @@ export function StockMetric({ title, value, change, prefix = "" }: MetricProps) 
                         <p className="text-sm font-medium text-muted-foreground">{title}</p>
                         <h3 className="text-2xl font-bold">
                             {prefix}
-                            {value.toFixed(2)}
+                            {safeValue.toFixed(2)}
                         </h3>
                         <p className={`text-sm ${isPositive ? "text-green-500" : "text-red-500"}`}>
                             {isPositive ? <ArrowUpIcon className="inline h-4 w-4" /> : <ArrowDownIcon className="inline h-4 w-4" />}
-                            {Math.abs(change).toFixed(2)}%
+                            {Math.abs(safeChange).toFixed(2)}%
                         </p>
                     </div>
                 </div>
