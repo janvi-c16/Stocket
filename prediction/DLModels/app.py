@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+import os
 from utils.LSTM_prediction import predict_stock_price_lstm
 from utils.GRU_prediction import predict_stock_price_gru
 
@@ -7,7 +8,7 @@ app = Flask(__name__)
 
 CORS(app, supports_credentials=True, resources={
     r"/*": {
-        "origins": ["http://localhost:5173","https://stocketai.vercel.app"],
+        "origins": ["http://localhost:5173", "https://stocketai.vercel.app"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
@@ -16,7 +17,7 @@ CORS(app, supports_credentials=True, resources={
 @app.route('/')
 def home():
     return "Welcome to DL Predictions!"
- 
+
 @app.route('/lstm/<ticker>', methods=['GET'])
 def lstm(ticker):
     try:
@@ -41,4 +42,5 @@ def gru(ticker):
         return response
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5002)
+    port = int(os.environ.get("PORT", 5000))  # <— IMPORTANT FOR RENDER
+    app.run(host='0.0.0.0', port=port)
