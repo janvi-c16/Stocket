@@ -4,21 +4,12 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime, timedelta
 from tensorflow.keras.models import load_model
-import yfinance as yf
 import os
 
-# Force disable browser impersonation multiple ways
+# Set environment variable BEFORE importing yfinance to disable any browser impersonation
 os.environ['YF_ENABLE_CHROME_IMPERSONATE'] = '0'
-try:
-    import yfinance.scrapers.history
-    yfinance.scrapers.history.ENABLE_CHROME_IMPERSONATE = False
-except (ImportError, AttributeError):
-    pass
 
-try:
-    yf.scrapers.history.ENABLE_CHROME_IMPERSONATE = False
-except (AttributeError):
-    pass
+import yfinance as yf
 
 def get_data(ticker, period='10y'):
     """
@@ -40,10 +31,6 @@ def get_data(ticker, period='10y'):
             for attempt in range(retry_count):
                 try:
                     _log(f"Attempt {attempt+1}/{retry_count}: Trying yf.Ticker('{sym}').history()")
-                    
-                    # Disable browser impersonation to fix ImpersonateError
-                    import yfinance.scrapers.history
-                    yfinance.scrapers.history.ENABLE_CHROME_IMPERSONATE = False
                     
                     stock = yf.Ticker(sym)
                     df_local = stock.history(

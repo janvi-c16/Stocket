@@ -5,7 +5,7 @@ gunicorn
 requests
 scikit-learn
 keras>=3.0.0
-yfinance>=0.2.40
+yfinance==0.2.37
 matplotlib
 tensorflow>=2.13
 numpy

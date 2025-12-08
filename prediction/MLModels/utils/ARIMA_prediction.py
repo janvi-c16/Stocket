@@ -1,8 +1,12 @@
 from flask import Flask, jsonify, request
 import joblib
+import os
+
+# Set environment variable BEFORE importing yfinance to disable any browser impersonation
+os.environ['YF_ENABLE_CHROME_IMPERSONATE'] = '0'
+
 import yfinance as yf
 import pandas as pd
-import os
 
 current_directory = os.getcwd()
 print(f"Current working directory: {current_directory}")

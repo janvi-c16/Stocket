@@ -1,4 +1,8 @@
 import os
+
+# Set environment variable BEFORE importing yfinance to disable any browser impersonation
+os.environ['YF_ENABLE_CHROME_IMPERSONATE'] = '0'
+
 import yfinance as yf
 from datetime import datetime, timedelta
 from flask import jsonify, request
