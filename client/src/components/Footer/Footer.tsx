@@ -13,6 +13,15 @@ const Footer = () => {
             "/sarang.png",
         
         },
+                {
+          id: 2,
+          name: "Ruqayya Shah",
+          designation: "Frontend & Machine Learning Developer",
+          linkedin: "https://www.linkedin.com/in/ruqayya-shah-92032923b/",
+          github: "https://github.com/Ruqayya0805",
+          image:
+            "/ruqayya.png",
+        },
         {
             id: 3,
             name: "Janvi Chauhan",
@@ -21,15 +30,6 @@ const Footer = () => {
               "/janvi.png",
             linkedin: "https://www.linkedin.com/in/janvi-chauhan-9297a92a1/",
             github: "https://github.com/janvi-c16",
-        },
-        {
-          id: 2,
-          name: "Naina Jain",
-          designation: "Machine Learning Developer",
-          linkedin: "https://www.linkedin.com/in/naina-jain-977682303/",
-          github: "https://github.com/Naina2308",
-          image:
-            "/naina.png",
         },
       ];
   return (
