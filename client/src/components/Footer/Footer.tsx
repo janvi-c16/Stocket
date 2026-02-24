@@ -31,6 +31,15 @@ const Footer = () => {
             linkedin: "https://www.linkedin.com/in/janvi-chauhan-9297a92a1/",
             github: "https://github.com/janvi-c16",
         },
+                {
+            id: 4,
+            name: "Yash Chaturvedi",
+            designation: "Frontend Developer",
+            image:
+              "/yash.png",
+            linkedin: "https://www.linkedin.com/in/yashchaturvedi00/",
+            github: "https://github.com/yashchaturvedi00",
+        },
       ];
   return (
     <div>
